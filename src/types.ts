@@ -135,3 +135,111 @@ export interface CorrelationInsight {
   caseIds: string[];
   entities: string[];
 }
+
+export interface ExtractedDocumentData {
+  id: string;
+  filename: string;
+  sourceType: DataSourceType;
+  rawText: string;
+  timestamp: string;
+  fileSize?: string;
+  persons: { name: string; role?: string; aliases?: string[] }[];
+  phoneNumbers: string[];
+  bankAccounts: string[];
+  vehicles: { plate: string; model?: string; color?: string }[];
+  locations: { name: string; address?: string; x: number; y: number; threatLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' }[];
+  events: { time: string; description: string; location?: string }[];
+  emails?: string[];
+  organizations?: string[];
+  summary: string;
+  confidenceScore: number;
+}
+
+// ---------------------------------------------------------------------------
+// Criminal Investigation Relationship Graph / Link Analysis Types
+// ---------------------------------------------------------------------------
+
+export type GraphEntityType = 
+  | 'PERSON'
+  | 'PHONE'
+  | 'VEHICLE'
+  | 'BANK_ACCOUNT'
+  | 'EMAIL'
+  | 'LOCATION'
+  | 'ORGANIZATION'
+  | 'CASE'
+  | 'EVENT'
+  | 'EVIDENCE';
+
+export interface SourceEvidenceRef {
+  docId: string;
+  docName: string;
+  sourceType?: DataSourceType;
+  snippet?: string;
+  timestamp?: string;
+}
+
+export interface GraphEntityNode {
+  id: string; // normalized unique ID (e.g. 'person_marcus_chen', 'phone_19175550192')
+  entityType: GraphEntityType;
+  displayName: string;
+  subtitle?: string;
+  metadata: Record<string, any>;
+  sourceDocIds: string[];
+  sourceEvidenceRefs: SourceEvidenceRef[];
+  confidence: number; // 0 - 100
+  caseIds: string[];
+  caseNumbers: string[];
+  clusterId: string; // e.g. 'Cluster A'
+  clusterName: string;
+  clusterColor: string;
+  isBridge?: boolean; // bridge between 2 or more clusters / cases
+  isHighConnectivity?: boolean; // "High Connectivity" or "Important Network Node"
+  degree: number; // count of connected edges
+  // D3 force simulation properties
+  x?: number;
+  y?: number;
+  vx?: number;
+  vy?: number;
+  fx?: number | null;
+  fy?: number | null;
+}
+
+export interface GraphRelationshipEdge {
+  id: string;
+  source: string | GraphEntityNode; // string initially, converted to node reference by D3
+  target: string | GraphEntityNode;
+  sourceId: string; // always string ID
+  targetId: string; // always string ID
+  label: string; // e.g. "owns", "uses", "transacted with", "located at", "involved in"
+  strength: number; // 0 - 100
+  strengthLevel: 'WEAK' | 'MEDIUM' | 'STRONG';
+  sourceDocIds: string[];
+  sourceEvidenceRefs: SourceEvidenceRef[];
+  evidenceSnippet?: string;
+  caseIds: string[];
+  direction?: 'BIDIRECTIONAL' | 'SOURCE_TO_TARGET';
+}
+
+export interface NetworkIntelligenceStats {
+  totalEntities: number;
+  totalRelationships: number;
+  totalCases: number;
+  totalClusters: number;
+  highConnectivityCount: number;
+  mostConnectedEntities: { id: string; name: string; type: GraphEntityType; degree: number }[];
+  strongestRelationships: { id: string; source: string; target: string; label: string; strength: number }[];
+  bridgeEntities: { id: string; name: string; type: GraphEntityType; clusterCount: number }[];
+  crossCaseEntitiesCount: number;
+}
+
+export interface GraphFilterState {
+  allowedTypes: Record<GraphEntityType, boolean>;
+  minStrength: number; // 0, 30, 70
+  selectedCaseId: string | 'ALL';
+  selectedClusterId: string | 'ALL';
+  minConfidence: number; // 0 - 100
+  searchQuery: string;
+  onlyHighConnectivity: boolean;
+}
+

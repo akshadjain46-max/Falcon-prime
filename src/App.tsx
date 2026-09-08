@@ -223,10 +223,13 @@ export default function App() {
           {activeTab === 'relationship-mapping' && (
             <CityMapInvestigation
               cases={cases}
+              documents={documents}
               dataSources={dataSources}
               locations={locations}
               onSelectLocation={setSelectedLocation}
               insights={insights}
+              onSelectTab={setActiveTab}
+              onLoadSampleDataset={handleLoadSampleDataset}
             />
           )}
 

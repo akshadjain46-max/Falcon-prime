@@ -1,21 +1,6 @@
-import { CaseItem, CorrelationInsight, DataSourceNode, DataSourceType, MapLocationNode, ProcessingQueueItem } from '../types';
+import { CaseItem, CorrelationInsight, DataSourceNode, DataSourceType, ExtractedDocumentData, MapLocationNode, ProcessingQueueItem } from '../types';
 
-export interface ExtractedDocumentData {
-  id: string;
-  filename: string;
-  sourceType: DataSourceType;
-  rawText: string;
-  timestamp: string;
-  fileSize?: string;
-  persons: { name: string; role?: string; aliases?: string[] }[];
-  phoneNumbers: string[];
-  bankAccounts: string[];
-  vehicles: { plate: string; model?: string; color?: string }[];
-  locations: { name: string; address?: string; x: number; y: number; threatLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' }[];
-  events: { time: string; description: string; location?: string }[];
-  summary: string;
-  confidenceScore: number;
-}
+export type { ExtractedDocumentData };
 
 // Helper to determine source type from filename or content
 export function detectSourceType(filename: string, content: string): DataSourceType {
@@ -204,6 +189,14 @@ export function parseDocumentContent(filename: string, content: string, explicit
     });
   }
 
+  // 7. Extract Emails
+  const emailMatches = content.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [];
+  const uniqueEmails = Array.from(new Set(emailMatches.map(e => e.toLowerCase())));
+
+  // 8. Extract Organizations
+  const orgMatches = content.match(/(?:[A-Z][A-Za-z0-9&.\s]{2,25}(?:Holdings|Corp|Corporation|Inc|LLC|Bank|Logistics|Dept|Department|Agency|Syndicate|Bureau))\b/g) || [];
+  const uniqueOrgs = Array.from(new Set(orgMatches.map(o => o.trim()))).slice(0, 6);
+
   // Document Summary
   const summaryLine = lines.find(l => l.length > 25 && !l.startsWith('#')) || content.slice(0, 150);
   const summary = summaryLine.trim();
@@ -221,6 +214,8 @@ export function parseDocumentContent(filename: string, content: string, explicit
     vehicles: uniquePlates,
     locations: locationList,
     events: eventsList,
+    emails: uniqueEmails,
+    organizations: uniqueOrgs,
     summary,
     confidenceScore: Math.min(99, Math.max(78, 80 + personList.length * 3 + uniquePhones.length * 2))
   };
