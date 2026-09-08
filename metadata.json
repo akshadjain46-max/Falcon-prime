@@ -1,0 +1,8 @@
+{
+  "name": "Falcon",
+  "description": "Multi-source forensic intelligence platform linking FIRs, CDRs, Financial Records, CCTV, Social Media, and Criminal History onto an animated city investigation core.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
